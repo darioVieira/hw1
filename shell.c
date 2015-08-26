@@ -33,18 +33,13 @@ int cmd_cd(tok_t arg[])
 	
 	if(chdir((dir[0]=='-')?cwd:dir)<0)//
 		perror("Unable to change");
-	//chdir(arg[0]);
 	getcwd(cwd,sizeof(cwd));
-	/*cdchar* d=arg[0];
-	if(d=NULL)
-		d=getenv("HOME");//getenv(char*); -searches the environment string pointed to by name and returns associated string
-	if(chdir((d[0]=='-')?cwd:d)<0)
-		printf("Can't change to the entered directory");
-	else
-	{
-		getcwd(cwd,sizeof(cwd));
-	}*/
 	return 1;
+}
+
+int cmd_exec(tok_t arg[])
+{
+	fork();
 }
 
 int cmd_help(tok_t arg[]);
@@ -155,7 +150,7 @@ int shell (int argc, char *argv[])
   printf("%s running as PID %d under %d\n",argv[0],pid,ppid);
 
   lineNum=0;
-  fprintf(stdout, "%d: %s $", lineNum, cwd);
+  fprintf(stdout, "%d: %s$ ", lineNum, cwd);
   while ((s = freadln(stdin)))
   {
   	lineNum++;
@@ -164,7 +159,14 @@ int shell (int argc, char *argv[])
     if(fundex >= 0) cmd_table[fundex].fun(&t[1]);
     else 
     {
-      fprintf(stdout, "This shell only supports built-ins. Replace this to run programs as commands.\n");
+      cpid=fork();
+      if(cpid==0)//is the child
+      {
+	  	char *execArgs[] = {s, t[1], t[2] };
+	  	execvp(s, execArgs);
+	  	exit(0);
+      }
+      wait(cpid);//makes parent wait for child~ I think~ WORKS
     }
     
     fprintf(stdout, "%d: %s$ ", lineNum,cwd);
