@@ -31,16 +31,32 @@ int cmd_cd(tok_t arg[])
 {	
 	char *dir=arg[0];
 	
-	if(chdir((dir[0]=='-')?cwd:dir)<0)//
+	if(chdir((dir[0]=='-')?cwd:dir)<0)//catches an invalid directory
 		perror("Unable to change");
 	getcwd(cwd,sizeof(cwd));
 	return 1;
 }
 
-int cmd_exec(tok_t arg[])
-{
-	fork();
-}
+void execPath(char *fname, char **argv) {
+   char temp[PATH_MAX];//PATH_MAX is a macro that sets the size of temp to the longest possible size the OS allows a path to be- apparently not true though...
+   tok_t *path;
+   char *envLs = getenv("PATH");//searches the environment list (can be seen with echo `getenv("PATH")`) and returns a pointer to the corresponding value string   
+   path = getToks(envLs);//cannot all be done in 1 line for some reason... (tok_t*path)
+   
+   int execvRetVal=(execv(fname,argv));//runs execv in current path first, if executable is not in current path, execv returns -1
+   
+   if( execvRetVal==-1) 
+   { 
+     for(int i = 0; i < MAXTOKS && path[i]; i++) //adds all the pieces from the above pointer for the path resolution
+     {
+       strcpy(temp, path[i]);
+       strcat(temp, "/");
+       strcat(temp, fname);
+       execv(temp,argv);
+     }
+     
+   }
+ }
 
 int cmd_help(tok_t arg[]);
 
@@ -110,6 +126,7 @@ void init_shell()
     tcgetattr(shell_terminal, &shell_tmodes);
   }
   /** YOUR CODE HERE */
+  
 }
 
 /**
@@ -128,8 +145,6 @@ process* create_process(char* inputString)
   /** YOUR CODE HERE */
   return NULL;
 }
-
-
 
 int shell (int argc, char *argv[]) 
 {
@@ -159,11 +174,15 @@ int shell (int argc, char *argv[])
     if(fundex >= 0) cmd_table[fundex].fun(&t[1]);
     else 
     {
+      
       cpid=fork();
+      
       if(cpid==0)//is the child
       {
-	  	char *execArgs[] = {s, t[1], t[2] };
-	  	execvp(s, execArgs);
+	  	/*char *argblah[]={"/bin","/ls",NULL};
+	  	if(execv("/bin",argblah)==-1)
+	  		fprintf(stdout,"\nerror\n");*/
+	  	execPath(t[0],t);
 	  	exit(0);
       }
       wait(cpid);//makes parent wait for child~ I think~ WORKS
