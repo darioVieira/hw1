@@ -12,7 +12,7 @@ typedef struct process
   int argc;//no idea what to store
   pid_t pid;//pass process ID
   int completed;//0 if not completed, 1 if completed
-  int stopped;//0 if not stopped, 1 if stopped
+  int stopped;//0 if running, 1 if stopped, -1 if completed byut not stopped
   char background;//no idea what it means
   int status;//no idea
   struct termios tmodes;//no idea

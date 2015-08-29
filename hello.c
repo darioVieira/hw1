@@ -10,14 +10,34 @@
 #include <stdbool.h>
 #include <fcntl.h>
 
+
 #include "io.h"
 #include "parse.h"
 #include "process.h"
 #include "shell.h"
 
+
+process *currProc;
+
+
 int main()
 {
-	char temp[10];
+	printf("0\n");
+	char *temp="hello here there";
+	char **s=temp;
+	tok_t *t="hello there";
+	printf("1\n");
+	
+	printf("2\n");
+	//currProc->argv=t;
+	printf("3\n");
+	currProc.pid=5;
+	currProc.completed=0;
+    currProc.stopped=0;
+    printf("4\n");
+	printf("Command:\t%s\nProcess ID:\t%i\nCompleted:\t%i\t(0 if not completed, 1 if completed)\nStopped:\t%i\t(0 if not stopped, 1 if stopped)",currProc->argv,currProc->pid,currProc->completed,currProc->stopped);
+
+	/*char temp[10];
 	int i;
 	scanf("%s %i",temp,&i);
 	printf("::%s::\n",temp);

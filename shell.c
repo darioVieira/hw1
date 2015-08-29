@@ -36,9 +36,19 @@ int cmd_cd(tok_t arg[])
 		perror("Unable to change");
 	getcwd(cwd,sizeof(cwd));
 	return 1;
+} 
+  
+int cmd_lsp(tok_t arg[])
+{
+	
+	process *currProc=firstProcess;
+	while(currProc)
+	{
+		fprintf(stdout,"Command:\t%s\nProcess ID:\t%i\nCompleted:\t%i\t(0 if not completed, 1 if completed)\nStopped:\t%i\t(0 if not stopped, 1 if stopped)\n",currProc->argv,currProc->pid,currProc->completed,currProc->stopped);
+		currProc=currProc->nextProc;
+	}
+	return 1;
 }
-
-
 
 
 //Will return 0 if read/write file could not be opened
@@ -103,11 +113,11 @@ int execPath(char *fname, char **argv) //does not currently redirect stoud of UN
        strcat(temp, fname);
        execv(temp,argv);
      }
-     
    }
    return 1;
  }
  
+
  
 
 int cmd_help(tok_t arg[]);
@@ -127,6 +137,7 @@ fun_desc_t cmd_table[] =
   {cmd_help, "?", "\tShow this help menu"},
   {cmd_quit, "quit", "\tQuit the command shell"},
   {cmd_cd, "cd", "\tChange the directory"},
+  {cmd_lsp, "lsp","\tList all processes that have been run in the current shell session"},
 };
 
 int cmd_help(tok_t arg[]) 
@@ -182,20 +193,42 @@ void init_shell()
 }
 
 /**
- * Add a process to our process list
- */
-void add_process(process* p)
+ * Add a process to our process list*/
+void addProcess(struct process* p, int procCount)
 {
   /** YOUR CODE HERE */
+  
+  if(firstProcess==NULL)
+  {
+  	firstProcess=p;
+  }
+  else
+  {
+  	process *currProc,*prevProc;
+  	currProc=firstProcess;
+  	while(currProc)
+  	{
+  		prevProc=currProc;
+  		currProc=currProc->nextProc;
+  	}
+  	if(prevProc)//making sure prevProc exists- i.e. for when theres only 1 option
+  		prevProc->nextProc=p;
+  	currProc=p;
+  	currProc->prevProc=prevProc;
+  }
 }
 
 /**
  * Creates a process given the inputString from stdin
  */
-process* create_process(char* inputString)
-{
-  /** YOUR CODE HERE */
-  return NULL;
+process* createProcess(tok_t* inputString,int pid)//if firstProcess=0, that means 
+{	
+  process *p=malloc(sizeof(struct process));
+  p->argv=inputString;
+  p->pid=pid;
+  p->completed=0;
+  p->stopped=0;
+  return p;
 }
 
 int shell (int argc, char *argv[]) 
@@ -210,11 +243,16 @@ int shell (int argc, char *argv[])
   
   init_shell();
   
+  int *procCount=malloc(20);
+  firstProcess=malloc(sizeof(struct process));
+  procCount=0;
+  
+  
   //size_t size;
   getcwd(cwd,sizeof(cwd));//enters the absolute path name into the array pointed to by wd, size is the size of the array wd points to
   
   printf("%s running as PID %d under %d\n",argv[0],pid,ppid);
-
+  
   lineNum=0;
   fprintf(stdout, "%d: %s$ ", lineNum, cwd);
   while ((s = freadln(stdin)))
@@ -222,19 +260,26 @@ int shell (int argc, char *argv[])
   	lineNum++;
     t = getToks(s); /* break the line into tokens */
     fundex = lookup(t[0]); /* Is first token a shell literal */
+    
     if(fundex >= 0) cmd_table[fundex].fun(&t[1]);
     else 
     {
-      
       cpid=fork();
+      
       if(cpid==0)//is the child
       {
+      //add new process
+      pid = getpid();
+      addProcess(createProcess(t,pid), procCount);
+      //completed adding new process
       	int execRes=execPath(t[0],t);
       	if(!execRes)
       		fprintf(stdout,"Please ensure file name/s was/were entered correctly\n");
 	  	exit(0);
       }
       wait(cpid);//makes parent wait for child~ I think~ WORKS
+      procCount++;
+      
     }
     
     fprintf(stdout, "%d: %s$ ", lineNum,cwd);
