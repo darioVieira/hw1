@@ -9,7 +9,7 @@ OBJECTS  = $(SOURCES:.c=.o)
 
 # compilation and linking
 CC      = gcc
-CFLAGS  = -std=c99 -ggdb3 -c
+CFLAGS  = -std=c99 -ggdb3 -c -w
 LDFLAGS = 
 WARN    = -Wall -Wextra -pedantic
 COMPILE.c = $(CC) $(CFLAGS) $(CPPFLAGS) $(WARN)

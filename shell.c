@@ -10,6 +10,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <stdbool.h>
+#include <fcntl.h>
 
 #define INPUT_STRING_SIZE 80
 
@@ -37,7 +38,41 @@ int cmd_cd(tok_t arg[])
 	return 1;
 }
 
-void execPath(char *fname, char **argv) {
+
+
+
+
+void execPath(char *fname, char **argv) //does not currently redirect stoud of UNIX commands, only normal functions
+{
+   int reFrom=0, wrTo=0,i;
+   
+   for( i = 0; argv[i]; i++) 
+   {
+    if(strchr(argv[i],'>')) //only works if entered in the specific layout:dsd [function] [space] > [space] [write to folder]
+    	wrTo = i;//stores the pointer to the begining of the char* that has >, for the file that must be written to, we need i+1
+   	if(strchr(argv[i],'<')) 
+   		reFrom = i; 
+   }
+   fprintf(stdout,"\n\n%s\n\n",argv[wrTo+1]);
+   
+   if(wrTo)//means if int!=0
+   {
+	   //dup2 code and explanation obtained from codewiki.wikidot.com/c:system-calls:dup2
+	   int file = open(argv[wrTo+1],O_WRONLY);//opens as a write only file;
+	   if(file < 0)    
+	   {
+	   	fprintf(stderr,"Could not open file\n");
+	   	return 1;
+	   }
+	   if(dup2(file,1) < 0)//Now we redirect standard output to the file using dup2 
+	   {
+	   	fprintf(stderr,"Could not redirect standard output to file\n");
+	   	return 1;
+	   }
+	}
+   
+   
+   
    char temp[PATH_MAX];//PATH_MAX is a macro that sets the size of temp to the longest possible size the OS allows a path to be- apparently not true though...
    tok_t *path;
    char *envLs = getenv("PATH");//searches the environment list (can be seen with echo `getenv("PATH")`) and returns a pointer to the corresponding value string   
@@ -57,6 +92,8 @@ void execPath(char *fname, char **argv) {
      
    }
  }
+ 
+ 
 
 int cmd_help(tok_t arg[]);
 
@@ -156,7 +193,6 @@ int shell (int argc, char *argv[])
   pid_t ppid = getppid();	/* get parents PID */
   pid_t cpid, tcpid, cpgid;
   
-  
   init_shell();
   
   //size_t size;
@@ -168,6 +204,7 @@ int shell (int argc, char *argv[])
   fprintf(stdout, "%d: %s$ ", lineNum, cwd);
   while ((s = freadln(stdin)))
   {
+  	fprintf(stdout,"%s",s);
   	lineNum++;
     t = getToks(s); /* break the line into tokens */
     fundex = lookup(t[0]); /* Is first token a shell literal */
@@ -176,12 +213,16 @@ int shell (int argc, char *argv[])
     {
       
       cpid=fork();
-      
       if(cpid==0)//is the child
       {
-	  	/*char *argblah[]={"/bin","/ls",NULL};
-	  	if(execv("/bin",argblah)==-1)
-	  		fprintf(stdout,"\nerror\n");*/
+      	char *temp=">";
+    	char *wrTo=temp;
+      	
+   		if(strchr(s,*wrTo))
+   		{
+   			
+   		}
+   		
 	  	execPath(t[0],t);
 	  	exit(0);
       }
