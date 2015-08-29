@@ -41,8 +41,8 @@ int cmd_cd(tok_t arg[])
 
 
 
-
-void execPath(char *fname, char **argv) //does not currently redirect stoud of UNIX commands, only normal functions
+//Will return 0 if read/write file could not be opened
+int execPath(char *fname, char **argv) //does not currently redirect stoud of UNIX commands, only normal functions //wc works... but ls doesn't... these are the questions that plague me
 {
    int reFrom=0, wrTo=0,i;
    
@@ -53,7 +53,6 @@ void execPath(char *fname, char **argv) //does not currently redirect stoud of U
    	if(strchr(argv[i],'<')) 
    		reFrom = i; 
    }
-   fprintf(stdout,"\n\n%s\n\n",argv[wrTo+1]);
    
    if(wrTo)//means if int!=0
    {
@@ -61,14 +60,29 @@ void execPath(char *fname, char **argv) //does not currently redirect stoud of U
 	   int file = open(argv[wrTo+1],O_WRONLY);//opens as a write only file;
 	   if(file < 0)    
 	   {
-	   	fprintf(stderr,"Could not open file\n");
-	   	return 1;
+	   	fprintf(stderr,"Could not access: %s\n",argv[wrTo+1]);
+	   	return 0;
 	   }
-	   if(dup2(file,1) < 0)//Now we redirect standard output to the file using dup2 
+	   //Now we redirect standard output to the file using dup2 
+	   if(dup2(file,1) < 0)//1 parameter in dup2 means write to
 	   {
 	   	fprintf(stderr,"Could not redirect standard output to file\n");
-	   	return 1;
+	   	return 0;
 	   }
+	}
+	if(reFrom)
+	{
+		int file=open(argv[reFrom+1],O_RDONLY);
+		if(file<0)
+		{
+			fprintf(stderr,"Could not access: %s\n",argv[reFrom+1]);
+			return 0;
+		}
+		if(dup2(file,0)<0)//0 parameter in dup2 means read from
+		{
+			fprintf(stderr,"Could not read standard input from file\n");
+			return 0;
+		}
 	}
    
    
@@ -91,6 +105,7 @@ void execPath(char *fname, char **argv) //does not currently redirect stoud of U
      }
      
    }
+   return 1;
  }
  
  
@@ -204,7 +219,6 @@ int shell (int argc, char *argv[])
   fprintf(stdout, "%d: %s$ ", lineNum, cwd);
   while ((s = freadln(stdin)))
   {
-  	fprintf(stdout,"%s",s);
   	lineNum++;
     t = getToks(s); /* break the line into tokens */
     fundex = lookup(t[0]); /* Is first token a shell literal */
@@ -215,15 +229,9 @@ int shell (int argc, char *argv[])
       cpid=fork();
       if(cpid==0)//is the child
       {
-      	char *temp=">";
-    	char *wrTo=temp;
-      	
-   		if(strchr(s,*wrTo))
-   		{
-   			
-   		}
-   		
-	  	execPath(t[0],t);
+      	int execRes=execPath(t[0],t);
+      	if(!execRes)
+      		fprintf(stdout,"Please ensure file name/s was/were entered correctly\n");
 	  	exit(0);
       }
       wait(cpid);//makes parent wait for child~ I think~ WORKS

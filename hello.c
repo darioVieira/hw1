@@ -17,7 +17,10 @@
 
 int main()
 {
-	printf("hello\n");
+	char temp[10];
+	int i;
+	scanf("%s %i",temp,&i);
+	printf("::%s::\n",temp);
    /*char *invalid_characters = ">";
    char *myString = "hello.c > temp.txt";
    char *c = invalid_characters;

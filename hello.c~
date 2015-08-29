@@ -17,7 +17,11 @@
 
 int main()
 {
-   char *invalid_characters = ">";
+	char temp[10];
+	int i;
+	scanf("%s %i",temp,&i);
+	printf("::%s::\n",temp);
+   /*char *invalid_characters = ">";
    char *myString = "hello.c > temp.txt";
    char *c = invalid_characters;
    int reFrom=0, wrTo=0,min=0,i;
@@ -28,24 +32,9 @@ int main()
     reFrom=i;//if(strchr(myString[i],'<')) reFrom = i;
    	wrTo=8;//if(strchr(myString[i],'>')) wrTo = i;
    	min = (reFrom < wrTo) ? reFrom : wrTo;// min =min value of reFrom and wrTo
-   	printf("reFrom:\t%i\nwrTo:\t%i\nmin:\t%i\n",reFrom,wrTo,min);
+   	printf("reFrom:\t%i\nwrTo:\t%i\nwc min:\t%i\n",reFrom,wrTo,min);
    }
-   if(0)
-   {
-   	printf("0\n");
-   }
-   if(1)
-   {
-   	printf("1\n");
-   }
-   if(20)
-   {
-   	printf("20\n");
-   }
-   if(-1)
-   {
-   	printf("-1\n");
-   }
+
    
    
    
