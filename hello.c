@@ -22,7 +22,14 @@ process *currProc;
 
 int main()
 {
-	printf("0\n");
+	float num=-1000000000000000;
+	while(num<0)
+	{
+		num=num+1;
+	}
+	printf("DONE\n");
+	
+	/*printf("0\n");
 	char *temp="hello here there";
 	char **s=temp;
 	tok_t *t="hello there";

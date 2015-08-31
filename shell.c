@@ -198,7 +198,6 @@ void init_shell()
 void addProcess(struct process* p, int procCount)
 {
   /** YOUR CODE HERE */
-  
   if(!procBegun)
   {
   	firstProcess=p;
@@ -206,17 +205,11 @@ void addProcess(struct process* p, int procCount)
   }
   else
   {
-  	process *currProc,*prevProc;
-  	currProc=firstProcess;
-  	while(currProc)
-  	{
-  		prevProc=currProc;
+  	process *currProc=firstProcess;
+  	while(currProc->nextProc)
   		currProc=currProc->nextProc;
-  	}
-  	if(prevProc)//making sure prevProc exists- i.e. for when theres only 1 option
-  		prevProc->nextProc=p;
+  	currProc->nextProc=p;
   	currProc=p;
-  	currProc->prevProc=prevProc;
   }
 }
 
@@ -239,7 +232,7 @@ process* createProcess(char **inputString,int pid)
   	i++;
   }*/
   
-  p->argv=inputStrin[0];
+  p->argv=inputString[0];
   p->pid=pid;
   p->completed=0;
   p->stopped=0;
