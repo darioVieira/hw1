@@ -20,6 +20,7 @@
 #include "shell.h"
 
 char *cwd[PATH_MAX];
+bool *procBegun;
 
 int cmd_quit(tok_t arg[]) 
 {
@@ -44,11 +45,9 @@ int cmd_lsp(tok_t arg[])
 	process *currProc=firstProcess;
 	while(currProc)
 	{
-		fprintf(stdout,"in\n");
 		fprintf(stdout,"Command:\t%s\nProcess ID:\t%i\nCompleted:\t%i\t(0 if not completed, 1 if completed)\nStopped:\t%i\t(0 if not stopped, 1 if stopped)\n",currProc->argv,currProc->pid,currProc->completed,currProc->stopped);
 		currProc=currProc->nextProc;
 	}
-	fprintf(stdout,"done\n");
 	return 1;
 }
 
@@ -115,7 +114,6 @@ int execPath(char *fname, char **argv) //does not currently redirect stoud of UN
        strcat(temp, fname);
        execv(temp,argv);
      }
-     
    }
    return 1;
  }
@@ -201,16 +199,13 @@ void addProcess(struct process* p, int procCount)
 {
   /** YOUR CODE HERE */
   
-  fprintf(stdout,"7\n");
-  
-  if(firstProcess==NULL)
+  if(!procBegun)
   {
-  	fprintf(stdout,"8\n");
   	firstProcess=p;
+  	procBegun=true;
   }
   else
   {
-  	fprintf(stdout,"8\n");
   	process *currProc,*prevProc;
   	currProc=firstProcess;
   	while(currProc)
@@ -218,7 +213,7 @@ void addProcess(struct process* p, int procCount)
   		prevProc=currProc;
   		currProc=currProc->nextProc;
   	}
-  	if(prevProc)//making sure prevProc exists- i.e. 
+  	if(prevProc)//making sure prevProc exists- i.e. for when theres only 1 option
   		prevProc->nextProc=p;
   	currProc=p;
   	currProc->prevProc=prevProc;
@@ -228,10 +223,21 @@ void addProcess(struct process* p, int procCount)
 /**
  * Creates a process given the inputString from stdin
  */
-process* createProcess(tok_t* inputString,int pid)//if firstProcess=0, that means 
-{	
+process* createProcess(char **inputString,int pid)
+{
+		
   process *p=malloc(sizeof(struct process));
-  p->argv=inputString;
+  char *command="";
+  int i=0;
+  while(inputString[i])
+  {
+  	fprintf(stdout,"%i\n",i);
+  	command=strcat(command,inputString[i]);
+  	fprintf(stdout,"::\n");
+  	i++;
+  }
+  
+  p->argv=command;
   p->pid=pid;
   p->completed=0;
   p->stopped=0;
@@ -251,9 +257,10 @@ int shell (int argc, char *argv[])
   init_shell();
   
   int *procCount=malloc(20);
+  
   firstProcess=malloc(sizeof(struct process));
   procCount=0;
-  
+  procBegun=false;
   
   //size_t size;
   getcwd(cwd,sizeof(cwd));//enters the absolute path name into the array pointed to by wd, size is the size of the array wd points to
@@ -271,31 +278,23 @@ int shell (int argc, char *argv[])
     if(fundex >= 0) cmd_table[fundex].fun(&t[1]);
     else 
     {
-      fprintf(stdout,"before fork\n");
-      cpid=fork();
-      
-      if(cpid==0)//is the child
-      {
-      //add new process
-      fprintf(stdout,"before newProcess\n");
-      pid = getpid();
-      process *currProc=createProcess(t,pid);
-      if(currProc)
-      {
-      	fprintf(stdout,"Command:\t%s\nProcess ID:\t%i\nCompleted:\t%i\t(0 if not completed, 1 if completed)\nStopped:\t%i\t(0 if not stopped, 1 if stopped)\n",currProc->argv[0],currProc->pid,currProc->completed,currProc->stopped);
-      	addProcess(currProc, procCount);
-      }
-      fprintf(stdout,"after newProcess\n");
-      //completed adding new process
-      	int execRes=execPath(t[0],t);
-      	if(!execRes)
-      		fprintf(stdout,"Please ensure file name/s was/were entered correctly\n");
+	  addProcess(createProcess(t,pid), procCount);
+	  cpid=fork();
+	  
+	  if(cpid==0)//is the child
+	  {
+	  //add new process
+	  pid = getpid();
+	  
+	  //completed adding new process
+	  	int execRes=execPath(t[0],t);
+	  	if(!execRes)
+	  		fprintf(stdout,"Please ensure file name/s was/were entered correctly\n");
 	  	exit(0);
       }
       wait(cpid);//makes parent wait for child~ I think~ WORKS
       procCount++;
-      fprintf(stdout,"after fork\n");
-      fprintf(stdout,"Command:\t%s\nProcess ID:\t%i\nCompleted:\t%i\t(0 if not completed, 1 if completed)\nStopped:\t%i\t(0 if not stopped, 1 if stopped)\n",firstProcess->argv[0],firstProcess->pid,firstProcess->completed,firstProcess->stopped);
+      
     }
     
     fprintf(stdout, "%d: %s$ ", lineNum,cwd);

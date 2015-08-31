@@ -31,9 +31,9 @@ int main()
 	printf("2\n");
 	//currProc->argv=t;
 	printf("3\n");
-	currProc->pid=5;
-	currProc->completed=0;
-    currProc->stopped=0;
+	currProc.pid=5;
+	currProc.completed=0;
+    currProc.stopped=0;
     printf("4\n");
 	printf("Command:\t%s\nProcess ID:\t%i\nCompleted:\t%i\t(0 if not completed, 1 if completed)\nStopped:\t%i\t(0 if not stopped, 1 if stopped)",currProc->argv,currProc->pid,currProc->completed,currProc->stopped);
 

@@ -20,6 +20,7 @@
 #include "shell.h"
 
 char *cwd[PATH_MAX];
+bool *procBegun;
 
 int cmd_quit(tok_t arg[]) 
 {
@@ -198,9 +199,10 @@ void addProcess(struct process* p, int procCount)
 {
   /** YOUR CODE HERE */
   
-  if(firstProcess==NULL)
+  if(!procBegun)
   {
   	firstProcess=p;
+  	procBegun=true;
   }
   else
   {
@@ -221,10 +223,23 @@ void addProcess(struct process* p, int procCount)
 /**
  * Creates a process given the inputString from stdin
  */
-process* createProcess(tok_t* inputString,int pid)//if firstProcess=0, that means 
-{	
+process* createProcess(char **inputString,int pid)
+{
+		
   process *p=malloc(sizeof(struct process));
-  p->argv=inputString;
+  
+  
+  /*char *command="";
+  int i=0;
+  while(inputString[i])
+  {
+  	fprintf(stdout,"%i\n",i);
+  	command=strcat(command,inputString[i]);
+  	fprintf(stdout,"::\n");
+  	i++;
+  }*/
+  
+  p->argv=inputStrin[0];
   p->pid=pid;
   p->completed=0;
   p->stopped=0;
@@ -244,9 +259,10 @@ int shell (int argc, char *argv[])
   init_shell();
   
   int *procCount=malloc(20);
+  
   firstProcess=malloc(sizeof(struct process));
   procCount=0;
-  
+  procBegun=false;
   
   //size_t size;
   getcwd(cwd,sizeof(cwd));//enters the absolute path name into the array pointed to by wd, size is the size of the array wd points to
@@ -264,17 +280,18 @@ int shell (int argc, char *argv[])
     if(fundex >= 0) cmd_table[fundex].fun(&t[1]);
     else 
     {
-      cpid=fork();
-      
-      if(cpid==0)//is the child
-      {
-      //add new process
-      pid = getpid();
-      addProcess(createProcess(t,pid), procCount);
-      //completed adding new process
-      	int execRes=execPath(t[0],t);
-      	if(!execRes)
-      		fprintf(stdout,"Please ensure file name/s was/were entered correctly\n");
+	  addProcess(createProcess(t,pid), procCount);
+	  cpid=fork();
+	  
+	  if(cpid==0)//is the child
+	  {
+	  //add new process
+	  pid = getpid();
+	  
+	  //completed adding new process
+	  	int execRes=execPath(t[0],t);
+	  	if(!execRes)
+	  		fprintf(stdout,"Please ensure file name/s was/were entered correctly\n");
 	  	exit(0);
       }
       wait(cpid);//makes parent wait for child~ I think~ WORKS
